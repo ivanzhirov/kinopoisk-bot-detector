@@ -5,12 +5,21 @@ class Contracts:
     def __init__(self, body):
         self.body = body
 
+    def __getattribute__(self, item):
+        val = object.__getattribute__(self, item)
+        if issubclass(
+            val.__class__,
+            mapper.MapperXpathField
+        ):
+            return val.get(body=self.body)
+        return val
+
     def to_dict(self):
         return {
-            k: getattr(self, k).get(body=self.body)
+            k: getattr(self, k)
             for k in dir(self)
             if issubclass(
-                getattr(self, k).__class__,
+                object.__getattribute__(self, k).__class__,
                 mapper.MapperXpathField
             )
         }

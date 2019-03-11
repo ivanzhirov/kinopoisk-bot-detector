@@ -50,11 +50,14 @@ class UserPageCrawler(PageCrawler):
 class MovieVotePageCrawler(PageCrawler):
     url_format = '/film/{movie_id}/votes/'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.wait = WebDriverWait(self, 10)
+        self.contract = contracts.MovieContract(body=self)
 
     def get_votes(self, max_count=None, prefetch_rules=None, user_rules=None):
+        print(f'Total votes: {self.contract.total_votes}')
+
         self.wait.until(
             EC.visibility_of_element_located((By.ID, "rating_list")))
 
