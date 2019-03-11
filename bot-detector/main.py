@@ -7,7 +7,7 @@ def start():
     capitan_marvel.fetch()
 
     print(
-        capitan_marvel.get_votes(max_count=5, prefetch_rules=[
+        capitan_marvel.get_votes(max_count=200, prefetch_rules=[
             lambda user: user.vote == 10,
         ], user_rules=[
             lambda user: user.movie_number == 1

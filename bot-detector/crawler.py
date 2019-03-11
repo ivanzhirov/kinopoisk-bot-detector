@@ -55,22 +55,35 @@ class MovieVotePageCrawler(PageCrawler):
         self.wait = WebDriverWait(self, 10)
         self.contract = contracts.MovieContract(body=self)
 
+    def get_current_votes_length(self) -> int:
+        return len(self.find_elements_by_class_name('rating_item'))
+
     def get_votes(self, max_count=None, prefetch_rules=None, user_rules=None):
         print(f'Total votes: {self.contract.total_votes}')
 
         self.wait.until(
             EC.visibility_of_element_located((By.ID, "rating_list")))
 
+        if max_count is None:
+            max_count = self.contract.total_votes
+
         # get number of elements
-        rating_items = self.find_elements_by_class_name('rating_item')
+        len_items = self.get_current_votes_length()
 
-        # wip
+        while len_items <= max_count:
+            print(f'Items {len_items}')
+            self.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);")
+
+            self.wait.until(
+                lambda driver: len_items != self.get_current_votes_length())
+
+            len_items = self.get_current_votes_length()
+
         ret = []
-        for index, item in enumerate(rating_items):
-            if max_count and index >= max_count:
-                break
-
-            ret.append(contracts.RatingItem(body=item).to_dict())
+        for item in self.find_elements_by_class_name('rating_item'):
+            ret.append(
+                contracts.RatingItem(body=item).to_dict())
 
         return ret
 
