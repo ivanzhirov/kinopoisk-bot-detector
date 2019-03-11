@@ -1,36 +1,21 @@
-
 import crawler
-import pipelines
 
-from selenium import webdriver
-# from xvfbwrapper import Xvfb
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 def start():
-    # cap marvel
-    # pipeline = pipelines.Pipeline(
-    #     crawler.MoviePageCrawler(movie_id=843859)
-    # ).then(
-    #     lambda crawl: crawl.fetch()
-    # ).then(
-    #     lambda html:
-    # )
+    #  cap marvel 843859
+    capitan_marvel = crawler.MovieVotePageCrawler(movie_id=843859)
+    capitan_marvel.fetch()
 
-    # with Xvfb() as display:
-    #     browser = webdriver.Firefox()
-    #     browser.get('http://ya.ru')
-    #     print(browser.title)
-    #     browser.quit()
-    print('hello')
-    driver = webdriver.Remote(
-        command_executor='http://hub:4444/wd/hub',
-        desired_capabilities=DesiredCapabilities.CHROME
+    print(
+        capitan_marvel.get_votes(max_count=5, prefetch_rules=[
+            lambda user: user.vote == 10,
+        ], user_rules=[
+            lambda user: user.movie_number == 1
+        ])
     )
-    driver.get('http://ya.ru')
-    print( driver.title )
-    driver.quit()
+
+    capitan_marvel.quit()
 
 
 if __name__ == '__main__':
     start()
-
