@@ -33,7 +33,7 @@ class MovieContract(Contracts):
 
 class UserContract(Contracts):
     movie_number: int = mapper.MapperXpathField(
-        xpath='//*[@id="profileInfoWrap"]/div[3]/div[1]/ul/li[1]/a/b')
+        xpath='//*[@id="profileInfoWrap"]/div[3]/div/ul/li[1]/a/b')
 
 
 class RatingItem(Contracts):

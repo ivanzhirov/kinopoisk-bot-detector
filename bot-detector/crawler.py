@@ -15,8 +15,10 @@ import exceptions
 
 def fetch_user(user_id):
     browser = UserPageCrawler(user_id=user_id)
+    print('user1')
     user = browser.fetch()
-    browser.quit()
+    print(user)
+    # browser.quit()
     return user
 
 
@@ -68,22 +70,36 @@ class MovieVotePageCrawler(PageCrawler):
             max_count = self.contract.total_votes
 
         # get number of elements
-        len_items = self.get_current_votes_length()
+        current_items = 0
 
-        while len_items <= max_count:
-            print(f'Items {len_items}')
+        print("Started to lazy load votes")
+
+        while current_items <= max_count:
+            current_items = self.get_current_votes_length()
+            print(f'Items {current_items}')
             self.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);")
 
             self.wait.until(
-                lambda driver: len_items != self.get_current_votes_length())
+                lambda driver: current_items != self.get_current_votes_length())
 
-            len_items = self.get_current_votes_length()
+            current_items = self.get_current_votes_length()
+
+        # self.quit()
+        print('Going to fetch users')
 
         ret = []
-        for item in self.find_elements_by_class_name('rating_item'):
-            ret.append(
-                contracts.RatingItem(body=item).to_dict())
+        for item in filter(lambda y: all(rule(y) for rule in prefetch_rules), map(
+            lambda x: contracts.RatingItem(body=x).to_dict(),
+            self.find_elements_by_class_name('rating_item')
+        )):
+           print(item)
+           user_browser = UserPageCrawler(user_id=item['user_id'])
+           print('here')
+           user = user_browser.fetch()
+           print(user)
+           if all(rule(user) for rule in user_rules):
+               ret.append(user)
 
         return ret
 
