@@ -1,0 +1,29 @@
+version: "3.7"
+
+# https://github.com/SeleniumHQ/docker-selenium
+
+services:
+  app:
+    build: .
+    command: ["./wait-for-hub.sh", 'python -u ./bot-detector/main.py']
+    depends_on:
+      - hub
+
+  hub:
+    image: selenium/hub:3.141.59-krypton
+    ports:
+      - 4444:4444
+
+  browser:
+    image: selenium/node-chrome:3.141.59-krypton
+    # entrypoint: bash -c 'SE_OPTS="-host $$HOSTNAME" /opt/bin/entry_point.sh'
+    shm_size: 128M
+    logging:
+      driver: none
+    depends_on:
+      - hub
+#    deploy:
+#      replicas: 1
+    environment:
+      HUB_HOST: hub
+      HUB_PORT: 4444
