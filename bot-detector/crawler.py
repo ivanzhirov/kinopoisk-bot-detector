@@ -54,7 +54,7 @@ class MovieVotePageCrawler(PageCrawler):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.wait = WebDriverWait(self, 10)
+        self.wait = WebDriverWait(self, 60)
         self.contract = None
 
     # fixme: find a better solution
