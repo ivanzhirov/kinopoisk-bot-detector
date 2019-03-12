@@ -1,5 +1,5 @@
 import typing
-
+import copy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -27,7 +27,7 @@ class PageCrawler(webdriver.Remote):
     def __init__(self, **kwargs):
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
-        options.add_argument("--disable-extensions")
+        options.add_extension("proxy.zip")
 
         capabilities = options.to_capabilities()
 
@@ -52,7 +52,7 @@ class UserPageCrawler(PageCrawler):
     def fetch(self) -> contracts.UserContract:
         super().fetch()
         print('End user fetching')
-        return contracts.UserContract(body=self)
+        return contracts.UserContract(driver=self)
 
 
 class MovieVotePageCrawler(PageCrawler):
@@ -61,12 +61,18 @@ class MovieVotePageCrawler(PageCrawler):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.wait = WebDriverWait(self, 10)
-        self.contract = contracts.MovieContract(body=self)
+        self.contract = None
+
+    def fetch(self):
+        super().fetch()
+        self.contract = contracts.MovieContract(driver=self)
 
     def get_current_votes_length(self) -> int:
         return len(self.find_elements_by_class_name('rating_item'))
 
     def get_votes(self, max_count=None, prefetch_rules=None, user_rules=None):
+        self.fetch()
+
         print(f'Total votes: {self.contract.total_votes}')
 
         self.wait.until(
@@ -99,14 +105,19 @@ class MovieVotePageCrawler(PageCrawler):
         data = filter(
             lambda y: all(rule(y) for rule in prefetch_rules),
             map(
-              lambda x: contracts.RatingItem(body=x).to_dict(),
+              lambda x: contracts.RatingItem(driver=x).to_dict(),
               self.find_elements_by_class_name('rating_item')
             )
         )
 
+        print('Users to last process ', len(list(data)))
+
         user_ids = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
+            print("executor")
+
             for user_page in executor.map(fetch_user, data):
+                print(user_page)
                 if all(rule(user_page) for rule in user_rules):
                     user_ids.append(user_page)
 

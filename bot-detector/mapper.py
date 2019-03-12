@@ -6,14 +6,15 @@ import selenium.common.exceptions
 
 
 class MapperXpathField:
-    def __init__(self, xpath):
-        self.xpath = xpath
+    def __init__(self, select):
+        self.select = select
         self.val = None
 
     def get(self, body):
         try:
-            return body.find_element_by_xpath(self.xpath).text
-        except selenium.common.exceptions.NoSuchElementException:
+            val = body.select(self.select)[0].string
+            return val and val.strip()
+        except Exception:
             raise exceptions.ParsingException()
 
 
@@ -31,7 +32,7 @@ class TotalMovieCountField(MapperXpathField):
 class UserIDField(MapperXpathField):
     def get(self,  body):
         try:
-            link = body.find_element_by_xpath(self.xpath).get_attribute("href")
+            link = body.select(self.select)[0]["href"]
         except selenium.common.exceptions.NoSuchElementException:
             raise exceptions.ParsingException()
 

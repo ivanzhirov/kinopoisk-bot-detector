@@ -4,7 +4,6 @@ import crawler
 def start():
     #  cap marvel 843859
     capitan_marvel = crawler.MovieVotePageCrawler(movie_id=843859)
-    capitan_marvel.fetch()
 
     print(
         capitan_marvel.get_votes(max_count=110, prefetch_rules=[
