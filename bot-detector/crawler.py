@@ -1,24 +1,23 @@
-import re
 import typing
 
-import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import contracts
-import exceptions
+import concurrent.futures
 
 
-def fetch_user(user_id):
-    browser = UserPageCrawler(user_id=user_id)
-    print('user1')
-    user = browser.fetch()
-    print(user)
-    # browser.quit()
+def fetch_user(user_data):
+    print('Processing user ', user_data)
+    browser = UserPageCrawler(user_id=user_data['user_id'])
+    print('Start fetching')
+    user = browser.fetch().to_dict()
+    print('Closed browser')
+    browser.quit()
+    print("Return user")
     return user
 
 
@@ -26,9 +25,15 @@ class PageCrawler(webdriver.Remote):
     url_format: str = None
 
     def __init__(self, **kwargs):
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--disable-extensions")
+
+        capabilities = options.to_capabilities()
+
         super().__init__(
             command_executor='http://hub:4444/wd/hub',
-            desired_capabilities=DesiredCapabilities.CHROME)
+            desired_capabilities=capabilities)
         self.item = None
         self.kwargs = kwargs
 
@@ -46,6 +51,7 @@ class UserPageCrawler(PageCrawler):
 
     def fetch(self) -> contracts.UserContract:
         super().fetch()
+        print('End user fetching')
         return contracts.UserContract(body=self)
 
 
@@ -74,32 +80,34 @@ class MovieVotePageCrawler(PageCrawler):
 
         print("Started to lazy load votes")
 
+        # fixme: bug with extra offset
         while current_items <= max_count:
             current_items = self.get_current_votes_length()
             print(f'Items {current_items}')
             self.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);")
 
+            # fixme: check waiting
             self.wait.until(
-                lambda driver: current_items != self.get_current_votes_length())
+                lambda _: current_items != self.get_current_votes_length())
 
             current_items = self.get_current_votes_length()
 
-        # self.quit()
         print('Going to fetch users')
+        print("Total users to process: ", self.get_current_votes_length())
 
-        ret = []
-        for item in filter(lambda y: all(rule(y) for rule in prefetch_rules), map(
-            lambda x: contracts.RatingItem(body=x).to_dict(),
-            self.find_elements_by_class_name('rating_item')
-        )):
-           print(item)
-           user_browser = UserPageCrawler(user_id=item['user_id'])
-           print('here')
-           user = user_browser.fetch()
-           print(user)
-           if all(rule(user) for rule in user_rules):
-               ret.append(user)
+        data = filter(
+            lambda y: all(rule(y) for rule in prefetch_rules),
+            map(
+              lambda x: contracts.RatingItem(body=x).to_dict(),
+              self.find_elements_by_class_name('rating_item')
+            )
+        )
 
-        return ret
+        user_ids = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            for user_page in executor.map(fetch_user, data):
+                if all(rule(user_page) for rule in user_rules):
+                    user_ids.append(user_page)
 
+        return user_ids

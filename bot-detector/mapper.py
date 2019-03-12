@@ -31,8 +31,7 @@ class TotalMovieCountField(MapperXpathField):
 class UserIDField(MapperXpathField):
     def get(self,  body):
         try:
-            link = body.find_element_by_xpath(
-                self.xpath).get_attribute("href")
+            link = body.find_element_by_xpath(self.xpath).get_attribute("href")
         except selenium.common.exceptions.NoSuchElementException:
             raise exceptions.ParsingException()
 

@@ -10,7 +10,7 @@ def start():
         capitan_marvel.get_votes(max_count=110, prefetch_rules=[
             lambda user: user['vote'] and user['vote'] == '10',
         ], user_rules=[
-            lambda user: user['movie_number'] == '1'
+            lambda user: user['movie_number'] in ['1', '2']
         ])
     )
 

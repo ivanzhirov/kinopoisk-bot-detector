@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cmd="$1"
-
+# todo: add checking status: True intead simple nc to hub server
 while true
 do
     sleep 1;
