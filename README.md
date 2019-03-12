@@ -3,7 +3,7 @@
 ### Idea
 The idea became after *Capitan Marvel* has been released. It seems like there were a lot of 10 votes on the movie with users with only one voted film in account and created right before the movie.
 
-So i want to create tool that can help to fetch that users.
+So i want to create a tool that can help to fetch that users(bots).
 
 ### Example
 ```python
