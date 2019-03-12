@@ -1,5 +1,4 @@
 import typing
-import copy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -58,6 +57,7 @@ class MovieVotePageCrawler(PageCrawler):
         self.wait = WebDriverWait(self, 10)
         self.contract = None
 
+    # fixme: find a better solution
     def fetch(self):
         super().fetch()
         self.contract = contracts.MovieContract(driver=self)
