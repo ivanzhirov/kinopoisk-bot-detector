@@ -27,30 +27,36 @@ class Contracts:
             k: getattr(self, k)
             for k in dir(self)
             if issubclass(
-            object.__getattribute__(self, k).__class__,
-            mapper.MapperXpathField
-        )
+                object.__getattribute__(self, k).__class__,
+                mapper.MapperXpathField
+            )
         }
 
 
 class MovieContract(Contracts):
-    total_votes: int = mapper.TotalMovieCountField(
+    total_votes: int = mapper.IntMapperXPathField(
+        r=r'История оценок \((.*?)\)',
         select='#block_left > div > table > tbody > tr:nth-child(3) > td > '
                'table:nth-child(1) > tbody > tr:nth-child(1) > td > table'
                ' > tbody > tr > td > h2')
 
 
+class RatingItem(Contracts):
+    user_id: int = mapper.IntMapperXPathField(
+        r=r'/user/(.*?)/',
+        attr='href',
+        select='td.comm-user > div > p > a')
+
+    vote: int = mapper.IntMapperXPathField(
+        select='td.comm-title > div > table > tbody > tr > td')
+
+
 class UserContract(Contracts):
-    movie_number: int = mapper.MapperXpathField(
+    movie_number: int = mapper.IntMapperXPathField(
         select='#profileInfoWrap > div.profileInfoWrapBottom > div > '
                'ul > li:nth-child(1) > a > b')
-    # user_id: int = mapper.UserIDField(
-    #     select='//*[@id="profileInfoWrap"]/div[1]/a')
 
-
-# #profileInfoWrap > div.profileInfoWrapLeft > a
-
-class RatingItem(Contracts):
-    user_id: int = mapper.UserIDField(select='td.comm-user > div > p > a')
-    vote: int = mapper.MapperXpathField(
-        select='td.comm-title > div > table > tbody > tr > td')
+    user_id: int = mapper.IntMapperXPathField(
+        r=r'/mykp/sendmessage/(.*?)/',
+        attr='href',
+        select='#profileInfoWrap > div.profileInfoWrapLeft > a')

@@ -13,11 +13,8 @@ import concurrent.futures
 def fetch_user(user_data):
     print('Processing user ', user_data)
     browser = UserPageCrawler(user_id=user_data['user_id'])
-    print('Start fetching')
     user = browser.fetch().to_dict()
-    print('Closed browser')
     browser.quit()
-    print("Return user")
     return user
 
 
@@ -50,7 +47,6 @@ class UserPageCrawler(PageCrawler):
 
     def fetch(self) -> contracts.UserContract:
         super().fetch()
-        print('End user fetching')
         return contracts.UserContract(driver=self)
 
 
@@ -109,14 +105,12 @@ class MovieVotePageCrawler(PageCrawler):
             )
         )
 
-        print('Users to last process ', len(list(data)))
+        print('Going to process users')
 
         user_ids = []
         with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
-            print("executor")
-
-            for user_page in executor.map(fetch_user, data):
-                print(user_page)
+            gen = executor.map(fetch_user, data)
+            for user_page in gen:
                 if all(rule(user_page) for rule in user_rules):
                     user_ids.append(user_page)
 

@@ -1,43 +1,48 @@
 import re
-
 import exceptions
-
-import selenium.common.exceptions
 
 
 class MapperXpathField:
-    def __init__(self, select):
+    def __init__(self, select, r=None, attr=None):
         self.select = select
         self.val = None
+        self.r = r
+        self.attr = attr
 
-    def get(self, body):
+    def extracted_attr(self, el):
+        if self.attr:
+            return el[self.attr]
+
+        return el.string
+
+    def clean_val(self, val):
+        if val:
+            return val.strip()
+
+    def to_external(self, val):
+        if self.r:
+            found = re.search(self.r, val)
+            if not found:
+                raise exceptions.ParsingException()
+            return found.group(1)
+
+        return val
+
+    def get_raw_value(self, body):
         try:
-            val = body.select(self.select)[0].string
-            return val and val.strip()
+            return body.select(self.select)[0]
         except Exception:
             raise exceptions.ParsingException()
 
-
-class TotalMovieCountField(MapperXpathField):
     def get(self, body):
-        val = super().get(body)
-
-        found = re.search(r'История оценок \((.*?)\)', val)
-        if not found:
-            raise exceptions.ParsingException()
-
-        return found.group(1)
+        self.val = self.extracted_attr(self.get_raw_value(body))
+        self.val = self.clean_val(self.val)
+        return self.to_external(self.val)
 
 
-class UserIDField(MapperXpathField):
-    def get(self,  body):
-        try:
-            link = body.select(self.select)[0]["href"]
-        except selenium.common.exceptions.NoSuchElementException:
-            raise exceptions.ParsingException()
+class IntMapperXPathField(MapperXpathField):
 
-        found = re.search(r'/user/(.*?)/', link)
-        if not found:
-            raise exceptions.ParsingException()
-
-        return found.group(1)
+    def to_external(self, val):
+        ext_val = super().to_external(val)
+        if ext_val:
+            return int(ext_val)
