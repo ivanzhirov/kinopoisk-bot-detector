@@ -26,7 +26,6 @@ class PageCrawler(webdriver.Remote):
 
     def __init__(self, **kwargs):
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
         options.add_extension("proxy.zip")
 
         capabilities = options.to_capabilities()
